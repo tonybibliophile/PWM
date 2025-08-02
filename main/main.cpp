@@ -12,21 +12,23 @@
 // ESP32 程式的唯一入口
 extern "C" void app_main(void)
 {
-    // 1. 定義 PWM 的基本行為 (風味設定單)
+    // 1. 定義 PWM 的基本行為 
     SequencerConfig config = {
         .speed_mode         = LEDC_HIGH_SPEED_MODE,
-        .freqA_hz           = 270,
-        .freqB_hz           = 400,
-        .switch_interval_ms = 305  
+        .freqA_hz           = 270, // 低頻率
+        .freqB_hz           = 400, // 高頻率
+        .switch_interval_ms = 305  //頻率切換間隔(ms)
     };
 
-    // 2. 建立序列器物件 (啟用機器人廚師)
+    // 2. 建立序列器物件 
     ComplexPwmSequencer sequencer(PWM_PIN, PWM_TIMER, PWM_CHANNEL, config);
 
-    // 3. 定義詳細的執行步驟 (食譜)
+    // 3. 定義詳細的執行步驟 
     // 格式: {動作類型, 完成後延遲毫秒數}
+    //  LARGE_CYCLE ：切換調整頻道
+    //  SMALL_CYCLE ：調整參數
     std::vector<SequenceStep> sequence_to_run = {
-        { LARGE_CYCLE, 5000 }, { LARGE_CYCLE, 5000 }, { LARGE_CYCLE, 5000 },
+        { LARGE_CYCLE, 1500 }, { LARGE_CYCLE, 1500 }, { LARGE_CYCLE, 1500 },
         { SMALL_CYCLE, 1500 }, { SMALL_CYCLE, 1500 }, { SMALL_CYCLE, 1500 },
         { LARGE_CYCLE, 0 }
     };
