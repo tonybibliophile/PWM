@@ -130,4 +130,7 @@ private: // 「私有區」：定義了類別內部的實作細節，外部無�
 
     // --- 同步機制 ---
     // 用於保護內部狀態的「安全鎖」，確保在多工環境下的資料安全。
-    portMUX_TYPE _lock = portMUX_INITIALIZER_UNLO
+    portMUX_TYPE _lock = portMUX_INITIALIZER_UNLOCKED;
+};
+
+#endif // COMPLEX_PWM_SEQUENCER_HPP
