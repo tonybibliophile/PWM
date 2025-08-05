@@ -38,22 +38,22 @@ void ComplexPwmSequencer::initialize_hardware() {
     ledc_timer_config_t timer_config = {
         .speed_mode = _config.speed_mode,
         .duty_resolution = LEDC_TIMER_13_BIT, // 13位元解析度 (0-8191)
-        .timer_num = _ledcTimer,
-        .freq_hz = _config.freqA_hz,          // 設定初始頻率
-        .clk_cfg = LEDC_AUTO_CLK,
+        .timer_num = _ledcTimer,              // main中設定
+        .freq_hz = _config.freqA_hz,          // 設定初始頻率 (低頻率)
+        .clk_cfg = LEDC_AUTO_CLK,             // 自動選擇時脈
         .deconfigure = false
     };
     ESP_ERROR_CHECK(ledc_timer_config(&timer_config));
 
     // 2. 設定LEDC通道
     ledc_channel_config_t channel_config = {
-        .gpio_num = _pwmPin,
-        .speed_mode = _config.speed_mode,
-        .channel = _ledcChannel,
+        .gpio_num = _pwmPin,            // main中設定
+        .speed_mode = _config.speed_mode, // main中設定
+        .channel = _ledcChannel, // main中設定
         .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = _ledcTimer,
+        .timer_sel = _ledcTimer, // main中設定
         .duty = 4096, // 初始工作週期設定為50% (4096 / 8192)
-        .hpoint = 0,
+        .hpoint = 0, // highpoint=0, 一個週期中低電位變為高電位的時間點
         .flags = { .output_invert = 0 } 
     };
     ESP_ERROR_CHECK(ledc_channel_config(&channel_config));
@@ -75,13 +75,13 @@ void ComplexPwmSequencer::begin(const std::vector<SequenceStep>& sequence) {
     ESP_LOGI(TAG, "Starting sequence. Total steps: %zu", sequence.size());
 
     // 進入臨界區，安全地設定啟動狀態
-    portENTER_CRITICAL(&_lock);
-    _sequence = sequence;
-    _currentStepIndex = 0;
+    portENTER_CRITICAL(&_lock); //確保讀取狀態時不被中斷
+    _sequence = sequence; //執行的序列
+    _currentStepIndex = 0;  //計算執行到第幾個步驟
     _currentState = RUNNING_PWM;
-    _pwmToggleCount = 0;
+    _pwmToggleCount = 0; //計算循環內切換次數
     const auto& firstStep = _sequence[_currentStepIndex];
-    _pwmToggleTarget = (firstStep.type == LARGE_CYCLE) ? 4 : 2; // 設定第一步的目標
+    _pwmToggleTarget = (firstStep.type == LARGE_CYCLE) ? 4 : 2; // 設定第一步的目標：大循環切換4次，小循環2次
     _lastChangeTime = _millis(); // 記錄開始時間
     portEXIT_CRITICAL(&_lock);
 
@@ -115,7 +115,7 @@ void ComplexPwmSequencer::update() {
         case RUNNING_PWM:
             // 判斷是否到了該切換頻率的時間點
             if (currentTime - local_lastChangeTime >= _config.switch_interval_ms) {
-                int next_toggle_count = local_pwmToggleCount + 1;
+                int next_toggle_count = local_pwmToggleCount + 1; //從零開始，加到4代表已經換過3次頻率low->high->low->high
                 
                 // 判斷本輪PWM是否已達到目標切換次數
                 if (next_toggle_count >= local_pwmToggleTarget) {

@@ -6,8 +6,8 @@
 
 // 定義硬體腳位的綽號
 #define PWM_PIN        GPIO_NUM_32
-#define PWM_TIMER      LEDC_TIMER_0
-#define PWM_CHANNEL    LEDC_CHANNEL_0
+#define PWM_TIMER      LEDC_TIMER_0 //若有其他需要用到TIMER 則可改成其他 TIMER_1,2,3
+#define PWM_CHANNEL    LEDC_CHANNEL_0 //同理可改CHANNEL 0-7
 
 // ESP32 程式的唯一入口
 extern "C" void app_main(void)
